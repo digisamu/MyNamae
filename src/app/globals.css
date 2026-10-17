@@ -1,26 +1,132 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@theme {
+  --color-washi: #faf9f6;
+  --color-ivory: #f4f0e8;
+  --color-surface: #ffffff;
+  --color-ink: #242424;
+  /* Slightly darker than #77736D so secondary text meets 4.5:1 on the warm background. */
+  --color-muted: #6b675f;
+  --color-line: #e7e2d8;
+  --color-line-strong: #d6cfc2;
+  --color-vermilion: #d94b3d;
+  /* Accessible vermilion for text and filled buttons (≥ 4.5:1 with white). */
+  --color-vermilion-ink: #b5382a;
+  --color-sakura: #f2d9d6;
+  --color-sage: #dce5db;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-turkic: #2e7a83;
+  --color-turkic-soft: #e2eeee;
+  --color-arabic: #9a6a1e;
+  --color-arabic-soft: #f3ead9;
+  --color-japanese: #3f4c7c;
+  --color-japanese-soft: #e5e7f0;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  --font-sans: var(--font-noto-sans), var(--font-noto-sans-ext), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-noto-serif), var(--font-shippori), ui-serif, Georgia, serif;
+  --font-mincho: var(--font-shippori), var(--font-noto-serif), serif;
+  --font-arabic: var(--font-naskh), "Noto Naskh Arabic", "Geeza Pro", "Arabic Typesetting", serif;
+
+  --shadow-soft: 0 1px 2px rgb(36 36 36 / 0.04), 0 8px 24px -12px rgb(36 36 36 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(36 36 36 / 0.05), 0 18px 40px -20px rgb(36 36 36 / 0.25);
+
+  --animate-reveal: reveal 520ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  --animate-stamp: stamp 420ms cubic-bezier(0.3, 1.4, 0.5, 1) 160ms both;
+  --animate-fade: fade 300ms ease-out both;
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+  @keyframes stamp {
+    from {
+      opacity: 0;
+      transform: scale(1.6) rotate(-8deg);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) rotate(-4deg);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-washi);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    /* Very faint paper grain. */
+    background-image:
+      radial-gradient(circle at 12% 8%, rgb(242 217 214 / 0.35), transparent 32rem),
+      radial-gradient(circle at 92% 40%, rgb(220 229 219 / 0.35), transparent 28rem);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+
+  :lang(ja) {
+    line-break: strict;
+  }
+
+  /* Break Japanese headings between phrases rather than inside words (where supported). */
+  :lang(ja) :is(h1, h2, h3) {
+    word-break: auto-phrase;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-vermilion-ink);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  ::selection {
+    background: var(--color-sakura);
+    color: var(--color-ink);
+  }
+
+  [lang="ar"] {
+    font-family: var(--font-arabic);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 1ms !important;
+  }
+}
+
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+  animation-duration: 1ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 1ms !important;
 }
