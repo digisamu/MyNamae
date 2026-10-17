@@ -1,6 +1,7 @@
 export interface KeyValueStorage {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
+  removeItem(key: string): void;
 }
 
 /**
@@ -10,7 +11,7 @@ export interface KeyValueStorage {
 export function getLocalStorage(): KeyValueStorage | null {
   try {
     if (typeof window === "undefined" || !window.localStorage) return null;
-    const probe = "__nameforge_probe__";
+    const probe = "__mynamae_probe__";
     window.localStorage.setItem(probe, probe);
     window.localStorage.removeItem(probe);
     return window.localStorage;
@@ -33,6 +34,16 @@ export function safeWrite(storage: KeyValueStorage | null, key: string, value: s
   if (!storage) return false;
   try {
     storage.setItem(key, value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function safeRemove(storage: KeyValueStorage | null, key: string): boolean {
+  if (!storage) return false;
+  try {
+    storage.removeItem(key);
     return true;
   } catch {
     return false;

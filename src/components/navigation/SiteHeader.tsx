@@ -2,7 +2,7 @@
 
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import type { MessageKey } from "@/features/localization/i18n";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { Logo } from "./Logo";
@@ -15,7 +15,7 @@ const LINKS: readonly { href: string; key: MessageKey }[] = [
 ];
 
 export function SiteHeader() {
-  const { t, state } = useNameForge();
+  const { t, state } = useMyNamae();
   const [open, setOpen] = useState(false);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);

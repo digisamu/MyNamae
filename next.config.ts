@@ -1,9 +1,7 @@
 import type { NextConfig } from "next";
 
+// The page reads the language and consent cookies per request, so it is rendered dynamically.
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
   turbopack: {
     rules: {
       "*.css": {

@@ -1,26 +1,31 @@
 import { defaultRegistry, type CultureRegistry } from "@/data/cultures";
 import { formatGeneratedName } from "@/features/formatting/formatName";
+import { signatureOf } from "@/features/generation/generate";
 import { isCultureId, validateDiceConfig } from "@/features/generation/config";
-import { DEFAULT_LOCALE, isLocale, type Locale } from "@/features/localization/i18n";
-import { MAX_DICE, MIN_DICE, type GenerationMode, type NameResult, type ResultExplanation } from "@/types/generation";
+import { type GenerationMode, type NameResult, type ResultExplanation } from "@/types/generation";
 import type { CultureId } from "@/types/names";
 
-export const STORAGE_KEY = "nameforge:state";
-export const SCHEMA_VERSION = 1;
+/** Functional storage (favorites, history, preferences). Written only with Functional consent. */
+export const STORAGE_KEY = "mynamae:state";
+export const SCHEMA_VERSION = 2;
 export const HISTORY_LIMIT = 24;
 export const FAVORITES_LIMIT = 100;
 
 export type MotionPreference = "system" | "reduced" | "full";
+/** Established-name style filter; only applied to curated entries that carry gender metadata. */
+export type NameStyle = "any" | "f" | "m" | "u";
 
 export interface Preferences {
   motion: MotionPreference;
   dice3d: boolean;
   mode: GenerationMode;
+  sound: boolean;
+  shake: boolean;
+  style: NameStyle;
 }
 
 export interface PersistedState {
   version: typeof SCHEMA_VERSION;
-  locale: Locale;
   preferences: Preferences;
   dice: CultureId[];
   history: NameResult[];
@@ -30,8 +35,7 @@ export interface PersistedState {
 /** Shared default snapshot; state updates always create new objects, so this is never mutated. */
 export const DEFAULT_STATE: PersistedState = {
   version: SCHEMA_VERSION,
-  locale: DEFAULT_LOCALE,
-  preferences: { motion: "system", dice3d: true, mode: "established" },
+  preferences: { motion: "system", dice3d: true, mode: "established", sound: false, shake: false, style: "any" },
   dice: ["turkic", "turkic"],
   history: [],
   favorites: [],
@@ -39,6 +43,7 @@ export const DEFAULT_STATE: PersistedState = {
 
 const MODES: readonly GenerationMode[] = ["established", "creative"];
 const MOTIONS: readonly MotionPreference[] = ["system", "reduced", "full"];
+const STYLES: readonly NameStyle[] = ["any", "f", "m", "u"];
 const EXPLANATIONS: readonly ResultExplanation[] = [
   "established",
   "creative",
@@ -46,7 +51,10 @@ const EXPLANATIONS: readonly ResultExplanation[] = [
   "established-unavailable-mixed",
 ];
 
-const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+export const isRecord = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null && !Array.isArray(v);
+
+export const resultSignature = (r: Pick<NameResult, "components">) => signatureOf(r.components.map((c) => c.componentId));
 
 /** Validates a stored result against the current dictionaries; stale or malformed entries are dropped. */
 export function parseResult(value: unknown, registry: CultureRegistry = defaultRegistry): NameResult | null {
@@ -84,7 +92,7 @@ export function parseResult(value: unknown, registry: CultureRegistry = defaultR
   };
 }
 
-function parseResults(value: unknown, limit: number): { items: NameResult[]; dropped: boolean } {
+export function parseResults(value: unknown, limit: number): { items: NameResult[]; dropped: boolean } {
   if (!Array.isArray(value)) return { items: [], dropped: value !== undefined };
   const items: NameResult[] = [];
   const seen = new Set<string>();
@@ -98,10 +106,45 @@ function parseResults(value: unknown, limit: number): { items: NameResult[]; dro
   return { items, dropped: items.length !== Math.min(value.length, limit) };
 }
 
+/** Lenient preference parsing: unknown or invalid fields fall back to defaults individually. */
+export function parsePreferences(value: unknown): Preferences {
+  const p = isRecord(value) ? value : {};
+  const d = DEFAULT_STATE.preferences;
+  return {
+    motion: MOTIONS.includes(p.motion as MotionPreference) ? (p.motion as MotionPreference) : d.motion,
+    dice3d: typeof p.dice3d === "boolean" ? p.dice3d : d.dice3d,
+    mode: MODES.includes(p.mode as GenerationMode) ? (p.mode as GenerationMode) : d.mode,
+    sound: typeof p.sound === "boolean" ? p.sound : d.sound,
+    shake: typeof p.shake === "boolean" ? p.shake : d.shake,
+    style: STYLES.includes(p.style as NameStyle) ? (p.style as NameStyle) : d.style,
+  };
+}
+
+export function parseDice(value: unknown): CultureId[] | null {
+  return Array.isArray(value) && value.every(isCultureId) && validateDiceConfig(value).ok ? (value as CultureId[]) : null;
+}
+
 export interface ParseOutcome {
   state: PersistedState;
   /** True when stored data existed but part of it had to be discarded. */
   recovered: boolean;
+}
+
+/** Parses the body of a stored state object (shared by the current schema and the legacy migration). */
+export function parseStateBody(data: Record<string, unknown>): ParseOutcome {
+  const dice = parseDice(data.dice);
+  const history = parseResults(data.history, HISTORY_LIMIT);
+  const favorites = parseResults(data.favorites, FAVORITES_LIMIT);
+  return {
+    state: {
+      version: SCHEMA_VERSION,
+      preferences: parsePreferences(data.preferences),
+      dice: dice ?? [...DEFAULT_STATE.dice],
+      history: history.items,
+      favorites: favorites.items,
+    },
+    recovered: !dice || history.dropped || favorites.dropped,
+  };
 }
 
 export function parsePersistedState(raw: string | null): ParseOutcome {
@@ -116,40 +159,7 @@ export function parsePersistedState(raw: string | null): ParseOutcome {
     // Unknown or future versions are not guessed at; start fresh.
     return { state: DEFAULT_STATE, recovered: true };
   }
-
-  let recovered = false;
-  const prefs = isRecord(data.preferences) ? data.preferences : {};
-  const preferences: Preferences = {
-    motion: MOTIONS.includes(prefs.motion as MotionPreference)
-      ? (prefs.motion as MotionPreference)
-      : DEFAULT_STATE.preferences.motion,
-    dice3d: typeof prefs.dice3d === "boolean" ? prefs.dice3d : DEFAULT_STATE.preferences.dice3d,
-    mode: MODES.includes(prefs.mode as GenerationMode) ? (prefs.mode as GenerationMode) : DEFAULT_STATE.preferences.mode,
-  };
-
-  const diceValid =
-    Array.isArray(data.dice) &&
-    data.dice.length >= MIN_DICE &&
-    data.dice.length <= MAX_DICE &&
-    data.dice.every(isCultureId) &&
-    validateDiceConfig(data.dice).ok;
-  if (!diceValid) recovered = true;
-
-  const history = parseResults(data.history, HISTORY_LIMIT);
-  const favorites = parseResults(data.favorites, FAVORITES_LIMIT);
-  recovered ||= history.dropped || favorites.dropped || !isLocale(data.locale);
-
-  return {
-    state: {
-      version: SCHEMA_VERSION,
-      locale: isLocale(data.locale) ? data.locale : DEFAULT_LOCALE,
-      preferences,
-      dice: diceValid ? (data.dice as CultureId[]) : [...DEFAULT_STATE.dice],
-      history: history.items,
-      favorites: favorites.items,
-    },
-    recovered,
-  };
+  return parseStateBody(data);
 }
 
 export function serializeState(state: PersistedState): string {

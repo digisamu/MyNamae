@@ -1,8 +1,10 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import { LanguageSwitcher } from "@/components/navigation/LanguageSwitcher";
+import { Wordmark } from "@/components/navigation/Logo";
+import { SealMark } from "@/components/navigation/SealMark";
 
 const GITHUB_URL = "https://github.com/digisamu";
 const WEBSITE_URL = "https://faridhuseynov.dev";
@@ -20,15 +22,16 @@ function GithubMark() {
 }
 
 export function SiteFooter() {
-  const { t } = useNameForge();
+  const { t, setCookieSettingsOpen, setPrivacyOpen } = useMyNamae();
   const year = useSyncExternalStore(noopSubscribe, currentYear, () => null);
 
   return (
     <footer className="border-t border-line bg-washi">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-12 sm:px-6 md:flex-row md:items-start md:justify-between">
         <div className="max-w-sm">
-          <p className="font-mincho text-lg">
-            Name<span className="text-vermilion-ink">Forge</span>
+          <p className="flex items-center gap-2">
+            <SealMark className="size-7" />
+            <Wordmark className="text-lg" />
           </p>
           <p className="mt-2 text-sm leading-relaxed text-muted">{t("footer.tagline")}</p>
           <p className="mt-4 text-xs text-muted" data-testid="footer-copyright">
@@ -60,6 +63,24 @@ export function SiteFooter() {
               </a>
             </li>
           </ul>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm md:justify-end">
+            <button
+              type="button"
+              onClick={() => setCookieSettingsOpen(true)}
+              className="text-muted underline-offset-4 hover:text-ink hover:underline"
+              data-testid="footer-cookie-settings"
+            >
+              {t("footer.cookieSettings")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setPrivacyOpen(true)}
+              className="text-muted underline-offset-4 hover:text-ink hover:underline"
+              data-testid="footer-privacy"
+            >
+              {t("footer.privacy")}
+            </button>
+          </div>
           <div className="md:hidden">
             <LanguageSwitcher size="md" full />
           </div>

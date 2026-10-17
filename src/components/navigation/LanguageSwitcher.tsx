@@ -1,13 +1,13 @@
 "use client";
 
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { LOCALES, type Locale } from "@/features/localization/i18n";
 
 const SHORT: Record<Locale, string> = { en: "EN", ru: "RU", ja: "日本語" };
 
 export function LanguageSwitcher({ size = "sm", full = false }: { size?: "sm" | "md"; full?: boolean }) {
-  const { locale, setLocale, t } = useNameForge();
+  const { locale, setLocale, t } = useMyNamae();
   return (
     <SegmentedControl
       testId="language-switcher"

@@ -25,6 +25,13 @@ export interface GenerationOptions {
   avoid?: ReadonlySet<string>;
   now?: () => number;
   createId?: () => string;
+  /**
+   * Dice kept from the previous roll, by index. A locked die keeps its component, faces and orientation;
+   * only unlocked dice are rerolled. Ignored when the locked culture no longer matches that die.
+   */
+  locked?: readonly (DieOutcome | null | undefined)[];
+  /** Established-mode filter on curated gender metadata; creative names are never filtered by gender. */
+  style?: "any" | "f" | "m" | "u";
 }
 
 export type GenerationResult =
@@ -106,11 +113,13 @@ function searchCombination(
 export function establishedCandidates(
   dice: readonly CultureId[],
   registry: CultureRegistry = defaultRegistry,
+  style: GenerationOptions["style"] = "any",
 ): CuratedName[] {
   if (isCrossCultural(dice)) return [];
   const culture = registry.cultures[dice[0]!];
   return culture.names.filter(
     (n) =>
+      (style === "any" || n.gender === style) &&
       n.segments !== null &&
       n.segments.length === dice.length &&
       n.segments.every((id, i) => {
@@ -163,7 +172,22 @@ export function generateName(
 
   const dice = request.dice;
   const cross = isCrossCultural(dice);
-  const pools = dice.map((_, i) => eligibleComponents(dice, i, registry));
+  const locked = dice.map((culture, i) => {
+    const die = options.locked?.[i];
+    if (!die) return null;
+    const component = registry.componentById.get(die.componentId);
+    const usable =
+      component !== undefined &&
+      die.culture === culture &&
+      fitsSlot(component, slotFor(i, dice.length)) &&
+      !(cross && component.bound);
+    return usable ? die : null;
+  });
+  const fullPools = dice.map((_, i) => eligibleComponents(dice, i, registry));
+  const pools = fullPools.map((pool, i) => {
+    const die = locked[i];
+    return die ? [registry.componentById.get(die.componentId)!] : pool;
+  });
 
   let selection: NameComponent[] | null = null;
   let curated: CuratedName | undefined;
@@ -174,7 +198,9 @@ export function generateName(
     if (cross) {
       explanation = "established-unavailable-mixed";
     } else {
-      const candidates = establishedCandidates(dice, registry);
+      const candidates = establishedCandidates(dice, registry, options.style).filter((n) =>
+        locked.every((die, i) => !die || n.segments![i] === die.componentId),
+      );
       const fresh = candidates.filter((n) => !avoid.has(signatureOf(n.segments!)));
       const name = pickOne(rng, fresh.length > 0 ? fresh : candidates);
       if (name) {
@@ -219,7 +245,9 @@ export function generateName(
   };
 
   const dieOutcomes: DieOutcome[] = selection.map((component, index) => {
-    const { faces, faceIndex } = buildFaces(component, pools[index]!, rng);
+    const keep = locked[index];
+    if (keep) return { ...keep, index, faces: [...keep.faces] };
+    const { faces, faceIndex } = buildFaces(component, fullPools[index]!, rng);
     return { index, culture: dice[index]!, componentId: component.id, faces, faceIndex };
   });
 

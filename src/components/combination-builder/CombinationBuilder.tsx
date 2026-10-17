@@ -2,7 +2,7 @@
 
 import { ArrowDown, ArrowUp, Dices, Plus, X } from "lucide-react";
 import { useMemo } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import { CultureMotif } from "@/components/culture-selector/CultureMotif";
 import { CULTURE_THEME } from "@/components/culture-selector/cultureTheme";
 import { formatGeneratedName } from "@/features/formatting/formatName";
@@ -27,7 +27,7 @@ function seedFor(dice: readonly string[]): number {
 }
 
 export function CombinationBuilder() {
-  const { t, state, setDice, cultureName, roll, phase, configIssue } = useNameForge();
+  const { t, state, setDice, cultureName, roll, phase, configIssue } = useMyNamae();
   const dice = state.dice;
   const mode = state.preferences.mode;
 

@@ -2,7 +2,7 @@
 
 import { Check } from "lucide-react";
 import { useState } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import { defaultRegistry } from "@/data/cultures";
 import { uniqueCultures } from "@/features/generation/config";
 import { formatComponent } from "@/features/formatting/formatName";
@@ -11,7 +11,7 @@ import { CultureMotif } from "./CultureMotif";
 import { CULTURE_THEME } from "./cultureTheme";
 
 export function CultureSelector() {
-  const { t, state, setSelectedCultures, cultureName } = useNameForge();
+  const { t, state, setSelectedCultures, cultureName } = useMyNamae();
   const selected = uniqueCultures(state.dice);
   const [warning, setWarning] = useState(false);
 

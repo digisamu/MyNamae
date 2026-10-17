@@ -17,7 +17,7 @@ export class SceneErrorBoundary extends Component<Props, { failed: boolean }> {
   }
 
   componentDidCatch(error: unknown) {
-    console.warn("NameForge: 3D dice unavailable, using flat dice.", error);
+    console.warn("MyNamae: 3D dice unavailable, using flat dice.", error);
     this.props.onError?.();
   }
 

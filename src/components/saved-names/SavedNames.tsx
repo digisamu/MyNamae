@@ -2,7 +2,7 @@
 
 import { Check, Copy, Heart, RotateCcw, Trash2 } from "lucide-react";
 import { useRef, useState, type KeyboardEvent } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
 import { CULTURE_THEME } from "@/components/culture-selector/cultureTheme";
 import { NameDisplay } from "@/components/name-result/NameDisplay";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -14,7 +14,7 @@ import type { NameResult } from "@/types/generation";
 type Tab = "recent" | "favorites";
 
 export function SavedNames() {
-  const { t, state, clearHistory } = useNameForge();
+  const { t, state, clearHistory, functionalAllowed, hydrated, setCookieSettingsOpen } = useMyNamae();
   const [tab, setTab] = useState<Tab>("recent");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const tabRefs = useRef<Record<Tab, HTMLButtonElement | null>>({ recent: null, favorites: null });
@@ -66,6 +66,19 @@ export function SavedNames() {
         </div>
       </div>
 
+      {hydrated && !functionalAllowed && (
+        <p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl border border-line bg-ivory/70 px-4 py-3 text-sm text-muted" data-testid="session-only-note">
+          <span>{t("saved.sessionOnly")}</span>
+          <button
+            type="button"
+            onClick={() => setCookieSettingsOpen(true)}
+            className="font-medium text-vermilion-ink underline-offset-4 hover:underline"
+          >
+            {t("saved.sessionLink")}
+          </button>
+        </p>
+      )}
+
       <div id={`panel-${tab}`} role="tabpanel" aria-labelledby={`tab-${tab}`} className="mt-8" tabIndex={0}>
         {items.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-line-strong bg-surface/50 px-6 py-12 text-center">
@@ -108,7 +121,7 @@ export function SavedNames() {
 }
 
 function SavedItem({ item }: { item: NameResult }) {
-  const { t, locale, cultureName, listCultures, isFavorite, toggleFavorite, roll, phase } = useNameForge();
+  const { t, locale, cultureName, listCultures, isFavorite, toggleFavorite, roll, phase } = useMyNamae();
   const [copied, setCopied] = useState(false);
   const formatted = formatGeneratedName(item);
   if (!formatted) return null;
@@ -157,7 +170,7 @@ function SavedItem({ item }: { item: NameResult }) {
             title={t("saved.regenerate", { cultures: listCultures(item.dice) })}
             disabled={phase === "rolling"}
             onClick={() => {
-              roll({ dice: item.dice, mode: item.requestedMode });
+              roll({ dice: item.dice, mode: item.requestedMode, ignoreLocks: true });
               document.getElementById("generator")?.scrollIntoView({ block: "start" });
             }}
             className="grid size-10 place-items-center rounded-full text-muted hover:bg-ivory hover:text-ink disabled:opacity-40"

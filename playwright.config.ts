@@ -4,8 +4,10 @@ const PORT = 3218;
 
 export default defineConfig({
   testDir: "./e2e",
-  timeout: 45_000,
+  timeout: 60_000,
   fullyParallel: true,
+  // Headless WebGL renders in software on the main thread; a few workers keep timing realistic.
+  workers: process.env.CI ? 2 : 3,
   retries: process.env.CI ? 1 : 0,
   reporter: [["list"]],
   use: {

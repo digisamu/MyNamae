@@ -1,16 +1,23 @@
-/** Hanko-style seal with the kanji 名 ("name") beside the wordmark. */
+import { SealMark } from "./SealMark";
+
+export function Wordmark({ className = "text-xl" }: { className?: string }) {
+  return (
+    <span className={`font-mincho font-medium tracking-tight text-ink ${className}`}>
+      My<span className="text-vermilion-ink">Namae</span>
+    </span>
+  );
+}
+
+/** Seal plus wordmark; 名前 ("name") is a decorative subtitle, never a translation of the brand. */
 export function Logo({ label }: { label: string }) {
   return (
     <a href="#top" aria-label={label} className="group inline-flex items-center gap-2.5 rounded-lg">
-      <span
-        aria-hidden
-        className="grid size-9 -rotate-3 place-items-center rounded-[10px] bg-vermilion font-mincho text-lg leading-none text-washi shadow-[inset_0_0_0_2px_rgb(250_249_246/0.35)] transition-transform group-hover:rotate-0"
-        lang="ja"
-      >
-        名
-      </span>
-      <span className="font-mincho text-xl font-medium tracking-tight text-ink">
-        Name<span className="text-vermilion-ink">Forge</span>
+      <SealMark className="size-9 -rotate-3 transition-transform group-hover:rotate-0" />
+      <span className="flex items-baseline gap-2">
+        <Wordmark />
+        <span aria-hidden lang="ja" className="hidden font-mincho text-xs tracking-[0.2em] text-muted sm:inline">
+          名前
+        </span>
       </span>
     </a>
   );

@@ -1,12 +1,15 @@
 "use client";
 
-import { Trash2 } from "lucide-react";
-import { useState, type ReactNode } from "react";
-import { useNameForge } from "@/components/app/NameForgeProvider";
+import { Cookie, Trash2 } from "lucide-react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useMyNamae } from "@/components/app/MyNamaeProvider";
+import { requestMotionPermission, supportsDeviceMotion } from "@/components/app/useShakeToRoll";
 import { LanguageSwitcher } from "@/components/navigation/LanguageSwitcher";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import type { MotionPreference } from "@/features/persistence/schema";
+
+const noopSubscribe = () => () => {};
 
 function Row({ title, hint, children }: { title: string; hint?: string; children: ReactNode }) {
   return (
@@ -21,9 +24,12 @@ function Row({ title, hint, children }: { title: string; hint?: string; children
 }
 
 export function SettingsPanel() {
-  const { t, state, setMotion, setDice3d, clearFavorites, storage, hydrated } = useNameForge();
+  const { t, state, setMotion, setDice3d, setSound, setShake, clearFavorites, storage, hydrated, setCookieSettingsOpen } =
+    useMyNamae();
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const { motion, dice3d } = state.preferences;
+  const [shakeDenied, setShakeDenied] = useState(false);
+  const motionSupported = useSyncExternalStore(noopSubscribe, supportsDeviceMotion, () => false);
+  const { motion, dice3d, sound, shake } = state.preferences;
 
   return (
     <section id="settings" aria-labelledby="settings-title" className="border-t border-line/70 bg-ivory/50">
@@ -67,6 +73,49 @@ export function SettingsPanel() {
                 { value: "off", label: t("settings.off") },
               ]}
             />
+          </Row>
+          <Row title={t("settings.sound")} hint={t("settings.soundHint")}>
+            <SegmentedControl<"on" | "off">
+              label={t("settings.sound")}
+              value={sound ? "on" : "off"}
+              onChange={(v) => setSound(v === "on")}
+              testId="sound-setting"
+              options={[
+                { value: "on", label: t("settings.on") },
+                { value: "off", label: t("settings.off") },
+              ]}
+            />
+          </Row>
+          {motionSupported && (
+            <Row title={t("settings.shake")} hint={shakeDenied ? t("settings.shakeDenied") : t("settings.shakeHint")}>
+              <SegmentedControl<"on" | "off">
+                label={t("settings.shake")}
+                value={shake ? "on" : "off"}
+                onChange={async (v) => {
+                  if (v === "off") return setShake(false);
+                  // iOS only grants motion access from a user gesture, so ask right here.
+                  const granted = await requestMotionPermission();
+                  setShakeDenied(!granted);
+                  setShake(granted);
+                }}
+                testId="shake-setting"
+                options={[
+                  { value: "on", label: t("settings.on") },
+                  { value: "off", label: t("settings.off") },
+                ]}
+              />
+            </Row>
+          )}
+          <Row title={t("settings.privacy")} hint={t("settings.privacyHint")}>
+            <button
+              type="button"
+              onClick={() => setCookieSettingsOpen(true)}
+              className="inline-flex min-h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm hover:bg-ivory"
+              data-testid="settings-cookie-settings"
+            >
+              <Cookie className="size-4" aria-hidden />
+              {t("footer.cookieSettings")}
+            </button>
           </Row>
           <Row title={t("settings.data")}>
             <button
