@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Naskh_Arabic, Noto_Sans, Noto_Sans_JP, Noto_Serif, Shippori_Mincho } from "next/font/google";
+import { Noto_Sans, Noto_Sans_JP, Noto_Serif, Shippori_Mincho } from "next/font/google";
 import { readServerPreferences } from "@/features/consent/server";
 import { messagesByLocale } from "@/features/localization/i18n";
 import "./globals.css";
@@ -34,14 +34,6 @@ const mincho = Shippori_Mincho({
   subsets: ["latin"],
   weight: ["500", "700"],
   display: "swap",
-});
-
-const naskh = Noto_Naskh_Arabic({
-  variable: "--font-naskh",
-  subsets: ["arabic"],
-  weight: ["400", "600"],
-  display: "swap",
-  preload: false,
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
@@ -79,7 +71,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang={locale}
-      className={`${sans.variable} ${sansExt.variable} ${serif.variable} ${mincho.variable} ${naskh.variable} antialiased`}
+      className={`${sans.variable} ${sansExt.variable} ${serif.variable} ${mincho.variable} antialiased`}
     >
       <body className="min-h-dvh">{children}</body>
     </html>
