@@ -219,6 +219,7 @@ const ru: Messages = {
     github: "Профиль на GitHub",
     website: "Личный сайт",
     copyright: "© {year} MyNamae",
+    description: "Сделано с ❤️ в Азербайджане",
     cookieSettings: "Настройки cookie",
     privacy: "Конфиденциальность и cookie",
   },

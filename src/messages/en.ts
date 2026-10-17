@@ -216,6 +216,7 @@ const en = {
     github: "GitHub profile",
     website: "Author's Website",
     copyright: "© {year} MyNamae",
+    description: "Made with ❤️ from Azerbaijan",
     cookieSettings: "Cookie settings",
     privacy: "Privacy & Cookies",
   },

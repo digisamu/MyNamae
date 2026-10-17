@@ -218,6 +218,7 @@ const ja: Messages = {
     github: "GitHub プロフィール",
     website: "個人サイト",
     copyright: "© {year} MyNamae",
+    description: "アゼルバイジャンから❤️を込めて",
     cookieSettings: "Cookie 設定",
     privacy: "プライバシーと Cookie",
   },
