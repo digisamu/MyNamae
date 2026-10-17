@@ -37,6 +37,7 @@ export function SiteFooter() {
           <p className="mt-4 text-xs text-muted" data-testid="footer-copyright">
             {year !== null ? t("footer.copyright", { year }) : " "}
           </p>
+          <p className="mt-1 text-xs text-muted">Made with ❤️ from Azerbaijan</p>
         </div>
         <div className="flex flex-col gap-5 md:items-end">
           <ul className="flex flex-wrap gap-2">

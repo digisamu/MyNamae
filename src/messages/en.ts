@@ -214,7 +214,7 @@ const en = {
   footer: {
     tagline: "Roll the dice. Discover your name.",
     github: "GitHub profile",
-    website: "Personal website",
+    website: "Author's Website",
     copyright: "© {year} MyNamae",
     cookieSettings: "Cookie settings",
     privacy: "Privacy & Cookies",
